@@ -1,0 +1,91 @@
+---
+title: "OPEB Commentary"
+output: html_document
+date: "2024-09-06"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(fs)
+library(readxl)
+library(scales)
+library(showtext)
+library(lubridate)
+library(zoo)
+library(gridExtra)
+library(tidyverse)
+library(rio)
+library(ggridges)
+library(ggpattern)
+library(ggdist)
+library(ggbeeswarm)
+library(ggstream)
+library(ggpubr)
+library(scales)
+library(knitr)
+library(reactable)
+library(htmltools)
+library(zoo)
+library(quantmod)
+library(PerformanceAnalytics)
+library(quadprog)
+library(janitor)
+library(stringi)
+library(car)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+font_add_google("Open Sans")
+showtext_auto()
+
+# Define theme_reason based on the uploaded file
+theme_reason <- function(base_line_size = 0.5,
+                         base_family = "Open Sans",
+                         base_size = 12) {
+  theme_minimal(base_family = base_family,
+                base_size = base_size,
+                base_line_size = base_line_size) %+replace%
+    theme(
+      axis.ticks = element_line(),
+      panel.grid = element_blank(),
+      panel.grid.major.y = element_line(color = "grey92"),
+      legend.position = "top"
+    )
+}
+
+C1 <- "#CC0100"  # Light orange 
+C2 <- "#66BB8B"  # Mid-tone orange
+C3 <- "#FF6733"  # Warm orange
+C4 <- "#2F456B"  # Lighter orange
+C5 <- "#A69FA1"  # Pale orange
+C6 <- "#F6B941"  # Yellow-orange
+C7 <- "#2779CB"  # Bright orange
+
+reason_colors <- c(C1, C2, C3, C4, C5, C6, C7)
+
+```
+
+```{r}
+
+County <- read_excel("county_data.xlsx")
+Cities <- read_excel("municipal_data.xlsx")
+SD <- read_excel("school_district_data.xlsx")
+State <- read_excel("state_data.xlsx")
+
+
+```
+
+
+```{r}
+
+
+
+```
+
+
+
+
