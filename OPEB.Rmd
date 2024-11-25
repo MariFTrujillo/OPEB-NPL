@@ -33,59 +33,113 @@ library(quadprog)
 library(janitor)
 library(stringi)
 library(car)
+library(writexl)
 
-knitr::opts_chunk$set(echo = TRUE)
-
-```
-
-```{r}
-font_add_google("Open Sans")
-showtext_auto()
-
-# Define theme_reason based on the uploaded file
-theme_reason <- function(base_line_size = 0.5,
-                         base_family = "Open Sans",
-                         base_size = 12) {
-  theme_minimal(base_family = base_family,
-                base_size = base_size,
-                base_line_size = base_line_size) %+replace%
-    theme(
-      axis.ticks = element_line(),
-      panel.grid = element_blank(),
-      panel.grid.major.y = element_line(color = "grey92"),
-      legend.position = "top"
-    )
-}
-
-C1 <- "#CC0100"  # Light orange 
-C2 <- "#66BB8B"  # Mid-tone orange
-C3 <- "#FF6733"  # Warm orange
-C4 <- "#2F456B"  # Lighter orange
-C5 <- "#A69FA1"  # Pale orange
-C6 <- "#F6B941"  # Yellow-orange
-C7 <- "#2779CB"  # Bright orange
-
-reason_colors <- c(C1, C2, C3, C4, C5, C6, C7)
-
-```
-
-```{r}
-
-County <- read_excel("county_data.xlsx")
-Cities <- read_excel("municipal_data.xlsx")
-SD <- read_excel("school_district_data.xlsx")
-State <- read_excel("state_data.xlsx")
-
+knitr::opts_chunk$set(
+  echo = TRUE,      
+  message = FALSE,    
+  warning = FALSE     
+)
 
 ```
 
 
 ```{r}
 
+County <- read_csv("top100_counties.csv")
+City <- read_csv("top100_cities.csv")
+SD <- read_csv("top100_sd.csv")
+State <- read_csv("all_states.csv")
 
 
 ```
 
 
+# Total OPEB and NPL by Entity for 2022
 
+```{r}
+
+State <- State %>%
+  mutate(
+    net_net_pension_liability = net_pension_liability - net_pension_assets,
+    net_net_opeb_liability = net_opeb_liability - net_opeb_assets, 
+    non_current_liabilities = total_liabilities - current_liabilities)
+
+# For County sheet
+County <- County %>%
+  mutate(
+    net_net_pension_liability = net_pension_liability - net_pension_assets,
+    net_net_opeb_liability = net_opeb_liability - net_opeb_assets, 
+    non_current_liabilities = total_liabilities - current_liabilities)
+
+# For City sheet
+City <- City %>%
+  mutate(
+    net_net_pension_liability = net_pension_liability - net_pension_assets,
+    net_net_opeb_liability = net_opeb_liability - net_opeb_assets, 
+    non_current_liabilities = total_liabilities - current_liabilities)
+
+# For SD sheet
+SD <- SD %>%
+  mutate(
+    net_net_pension_liability = net_pension_liability - net_pension_assets,
+    net_net_opeb_liability = net_opeb_liability - net_opeb_assets, 
+    non_current_liabilities = total_liabilities - current_liabilities)
+
+
+State <- State %>% mutate(Entity_Type = "State")
+County <- County %>% mutate(Entity_Type = "County")
+City <- City %>% mutate(Entity_Type = "City")
+SD <- SD %>% mutate(Entity_Type = "School District")
+
+```
+
+# Figure 1: Total NPL v OPEB
+
+```{r}
+by_year_data <- bind_rows(
+  State %>% select(year, net_net_pension_liability, net_net_opeb_liability),
+  County %>% select(year, net_net_pension_liability, net_net_opeb_liability),
+  City %>% select(year, net_net_pension_liability, net_net_opeb_liability),
+  SD %>% select(year, net_net_pension_liability, net_net_opeb_liability)
+)
+
+# Group by year and sum the liabilities
+summary_by_year_data <- by_year_data %>%
+  group_by(year) %>%
+  summarise(
+    total_net_net_pension_liability = sum(net_net_pension_liability, na.rm = TRUE),
+    total_net_net_opeb_liability = sum(net_net_opeb_liability, na.rm = TRUE)
+  )
+
+write_xlsx(list(summary_by_year_data = summary_by_year_data), "total_liabilities_by_year.xlsx")
+
+```
+
+# Figure 2: Share that NPL v OPEB occupy of total debt by entity 
+
+```{r}
+
+by_entity_data <- bind_rows(
+  State %>% select(year, net_net_pension_liability, net_net_opeb_liability, non_current_liabilities,Entity_Type),
+  County %>% select(year, net_net_pension_liability, net_net_opeb_liability, non_current_liabilities,Entity_Type),
+  City %>% select(year, net_net_pension_liability, net_net_opeb_liability, non_current_liabilities,Entity_Type),
+  SD %>% select(year, net_net_pension_liability, net_net_opeb_liability, non_current_liabilities,Entity_Type)
+)
+
+# Group by year and sum the liabilities
+by_entity_data <- by_entity_data %>%
+  filter(year == 2022) %>%
+  group_by(Entity_Type) %>%
+  summarise(
+    total_net_net_pension_liability = sum(net_net_pension_liability, na.rm = TRUE),
+    total_net_net_opeb_liability = sum(net_net_opeb_liability, na.rm = TRUE),
+    total_other_non_current_liabilities = sum(non_current_liabilities, na.rm = TRUE) - total_net_net_opeb_liability + total_net_net_pension_liability
+  ) 
+
+# Write the result to an Excel file
+write_xlsx(list(summary_by_year_data2 = by_entity_data), "total_liabilities_entity.xlsx")
+
+
+```
 
